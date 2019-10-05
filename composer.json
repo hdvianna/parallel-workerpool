@@ -1,0 +1,17 @@
+{
+    "name": "hdvianna/amp-workerpool",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "hdvianna",
+            "email": "hdvianna@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {"hdvianna\\": "src/"}
+    },
+    "require": {
+        "amphp/amp": "^2.2",
+        "amphp/mysql": "^1.1"
+    }
+}
