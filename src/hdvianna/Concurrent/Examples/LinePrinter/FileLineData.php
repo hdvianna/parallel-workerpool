@@ -1,7 +1,7 @@
 <?php
 
 
-namespace hdvianna\Concurrent\Examples\LineRecorder;
+namespace hdvianna\Concurrent\Examples\LinePrinter;
 
 
 class FileLineData

@@ -4,6 +4,7 @@ namespace hdvianna\Concurrent;
 
 use Amp\Deferred;
 use Amp\Promise;
+use Amp\Loop;
 
 class WorkerPool implements Runnable
 {
@@ -14,7 +15,7 @@ class WorkerPool implements Runnable
     private $workers = [];
     private $started = false;
 
-    public function __construct($workFactory)
+    public function __construct(WorkFactory $workFactory)
     {
         $this->workFactory = $workFactory;
     }
@@ -22,6 +23,7 @@ class WorkerPool implements Runnable
     public function appendWorker() : WorkerPool {
         $this->throwExceptionIfStarted(new WorkerAdditionException());
         $this->workers[] = new Worker($this->workFactory);
+        return $this;
     }
 
     public function run(): Promise
@@ -32,9 +34,10 @@ class WorkerPool implements Runnable
         $this->started = true;
         $started = &$this->started;
         Loop::run(function () use($workers, $deferred, &$started) {
-            yield Promise\all(array_map(function ($worker) {
+            Promise\all(array_map(function ($worker) {
                 return $worker->run();
             }, $workers));
+
             $deferred->resolve();
             $started = false;
         });
