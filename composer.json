@@ -1,6 +1,7 @@
 {
     "name": "hdvianna/amp-workerpool",
     "license": "MIT",
+    "minimum-stability": "alpha",
     "authors": [
         {
             "name": "hdvianna",
