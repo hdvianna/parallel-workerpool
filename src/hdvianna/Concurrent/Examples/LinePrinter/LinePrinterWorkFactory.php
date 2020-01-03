@@ -3,6 +3,7 @@
 
 namespace hdvianna\Concurrent\Examples\LinePrinter;
 
+use Amp\ByteStream\ResourceOutputStream;
 use hdvianna\Concurrent\Work;
 use hdvianna\Concurrent\WorkFactory;
 
@@ -13,14 +14,16 @@ class LinePrinterWorkFactory implements WorkFactory
     private $ended = false;
     private $lineNumber = 0;
     private $lineString = "";
-    private $outputPath = "";
+    private $outputStream;
 
     public function __construct(string $filePath)
     {
         $this->fileHandler = fopen($filePath, "r");
         $pathInfo =  pathinfo($filePath);
-        $this->outputPath = "{$pathInfo['dirname']}/{$pathInfo['filename']}.out.{$pathInfo['extension']}";
-        @unlink($this->outputPath);
+        $outputPath = "{$pathInfo['dirname']}/{$pathInfo['filename']}.out.{$pathInfo['extension']}";
+        @unlink($outputPath);
+        $fileHandler = fopen($outputPath, 'a');
+        $this->outputStream = new ResourceOutputStream($fileHandler);
         $this->moveNext();
     }
 
@@ -30,7 +33,7 @@ class LinePrinterWorkFactory implements WorkFactory
         $fileLineData
                 ->setLineNumber($this->lineNumber)
                 ->setLineString($this->lineString)
-                ->setOutputPath($this->outputPath);
+                ->setOutputStream($this->outputStream);
         $this->moveNext();
         return new LinePrinterWork($fileLineData);
     }
@@ -50,5 +53,9 @@ class LinePrinterWorkFactory implements WorkFactory
         }
     }
 
+    public function __destruct()
+    {
+        $this->outputStream->end();
+    }
 
 }

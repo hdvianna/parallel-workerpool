@@ -4,6 +4,8 @@
 namespace hdvianna\Concurrent\Examples\LinePrinter;
 
 
+use Amp\ByteStream\OutputStream;
+
 class FileLineData
 {
     /**
@@ -19,7 +21,7 @@ class FileLineData
     /**
      * @var
      */
-    private $outputPath;
+    private $outputStream;
 
     /**
      * @return int
@@ -53,19 +55,19 @@ class FileLineData
     }
 
     /**
-     * @return mixed
+     * @return OutputStream
      */
-    public function getOutputPath()
+    public function getOutputStream()
     {
-        return $this->outputPath;
+        return $this->outputStream;
     }
 
     /**
-     * @param mixed $outputPath
+     * @param OutputStream $outputStream
      */
-    public function setOutputPath($outputPath): void
+    public function setOutputStream($outputStream): void
     {
-        $this->outputPath = $outputPath;
+        $this->outputStream = $outputStream;
     }
 
 }

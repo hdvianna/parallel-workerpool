@@ -3,6 +3,8 @@
 
 namespace hdvianna\Concurrent\Examples\LinePrinter;
 
+use Amp\ByteStream\ResourceInputStream;
+use Amp\ByteStream\ResourceOutputStream;
 use hdvianna\Concurrent\Work;
 use Amp\Mysql\Pool;
 
@@ -22,11 +24,7 @@ class LinePrinterWork implements Work
     public function complete()
     {
         $outputData = "Line number: {$this->fileLineData->getLineNumber()}; value: {$this->fileLineData->getLineString()}";
-        $fileHandler = fopen($this->fileLineData->getOutputPath(), 'a');
-        flock($fileHandler, LOCK_EX );
-        fwrite($fileHandler, $outputData);
-        flock($fileHandler, LOCK_UN  );
-        fclose($fileHandler);
+        $this->fileLineData->getOutputStream()->write($outputData);
     }
 
 }
