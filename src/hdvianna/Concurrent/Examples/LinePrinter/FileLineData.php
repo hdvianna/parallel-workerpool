@@ -17,6 +17,11 @@ class FileLineData
     private $lineString;
 
     /**
+     * @var
+     */
+    private $outputPath;
+
+    /**
      * @return int
      */
     public function getLineNumber(): int
@@ -47,5 +52,20 @@ class FileLineData
         return $this;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getOutputPath()
+    {
+        return $this->outputPath;
+    }
+
+    /**
+     * @param mixed $outputPath
+     */
+    public function setOutputPath($outputPath): void
+    {
+        $this->outputPath = $outputPath;
+    }
 
 }

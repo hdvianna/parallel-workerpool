@@ -13,11 +13,14 @@ class LinePrinterWorkFactory implements WorkFactory
     private $ended = false;
     private $lineNumber = 0;
     private $lineString = "";
-
+    private $outputPath = "";
 
     public function __construct(string $filePath)
     {
         $this->fileHandler = fopen($filePath, "r");
+        $pathInfo =  pathinfo($filePath);
+        $this->outputPath = "{$pathInfo['dirname']}/{$pathInfo['filename']}.out.{$pathInfo['extension']}";
+        @unlink($this->outputPath);
         $this->moveNext();
     }
 
@@ -26,7 +29,8 @@ class LinePrinterWorkFactory implements WorkFactory
         $fileLineData = new FileLineData();
         $fileLineData
                 ->setLineNumber($this->lineNumber)
-                ->setLineString($this->lineString);
+                ->setLineString($this->lineString)
+                ->setOutputPath($this->outputPath);
         $this->moveNext();
         return new LinePrinterWork($fileLineData);
     }
