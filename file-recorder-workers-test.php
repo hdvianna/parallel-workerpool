@@ -24,7 +24,7 @@ function testWorkers($filePath, $workersNumber, $numberOfTests)
     $results = array();
     for($i = 0; $i < $numberOfTests; $i++) {
         $result = runTestWorkers($filePath, $workersNumber);
-        echo "[" . ($i + 1) ."/$numberOfTests]Finished $filePath with $workersNumber worker(s) in {$result}s".PHP_EOL;
+        echo "Finished [" . ($i + 1) ."/$numberOfTests]: $filePath with $workersNumber worker(s) in {$result}s".PHP_EOL;
         $results[] = $result;
     }
     $averageTime = array_sum($results)/$numberOfTests;
