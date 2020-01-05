@@ -1,13 +1,13 @@
 <?php
 
-require_once './vendor/autoload.php';
+require_once '../vendor/autoload.php';
 
 use hdvianna\Concurrent\Examples\LinePrinter\LinePrinterWorkFactory;
 use hdvianna\Concurrent\WorkerPool;
 
 if (count($argv) !== 3) {
     echo "Type: file-recorder-workers-test.php <file-path> <number-of-tests>".PHP_EOL;
-    echo "Example: file-recorder-workers-test.php ./test-data_x1000.csv 20".PHP_EOL;
+    echo "Example: file-recorder-workers-test.php ./data/test-data_x1000.csv 20".PHP_EOL;
     die;
 } else {
     $filePath = $argv[1];

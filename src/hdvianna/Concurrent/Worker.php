@@ -32,16 +32,16 @@ class Worker implements Runnable
     {
         $deferred =  new Deferred();
         $workerPool = $this->workFactory;
-        asyncCall(function() use($deferred, $workerPool) {
-            Loop::repeat(0, function ($watcherId) use($deferred, $workerPool) {
-                if ($workerPool->hasWork()) {
-                    $work = $workerPool->createWork();
+        Loop::repeat(0, function ($watcherId) use($deferred, $workerPool) {
+            if ($workerPool->hasWork()) {
+                $work = $workerPool->createWork();
+                asyncCall(function() use($work) {
                     $work->complete();
-                } else {
-                    $deferred->resolve();
-                    Loop::cancel($watcherId);
-                }
-            });
+                });
+            } else {
+                $deferred->resolve();
+                Loop::cancel($watcherId);
+            }
         });
         return $deferred->promise();
     }

@@ -3,10 +3,7 @@
 
 namespace hdvianna\Concurrent\Examples\LinePrinter;
 
-use Amp\ByteStream\ResourceInputStream;
-use Amp\ByteStream\ResourceOutputStream;
 use hdvianna\Concurrent\Work;
-use Amp\Mysql\Pool;
 
 class LinePrinterWork implements Work
 {
