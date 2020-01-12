@@ -3,9 +3,9 @@
 
 namespace hdvianna\Concurrent\Examples\LinePrinter;
 
-use hdvianna\Concurrent\Work;
+use hdvianna\Concurrent\Runnable;
 
-class LinePrinterWork implements Work
+class LinePrinterWork implements Runnable
 {
 
     /**
@@ -18,7 +18,7 @@ class LinePrinterWork implements Work
         $this->fileLineData = $fileLineData;
     }
 
-    public function complete()
+    public function run()
     {
         $outputData = "Line number: {$this->fileLineData->getLineNumber()}; value: {$this->fileLineData->getLineString()}";
         $this->fileLineData->getOutputStream()->write($outputData);

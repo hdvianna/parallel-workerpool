@@ -3,12 +3,6 @@
 
 namespace hdvianna\Concurrent;
 
-
-use function Amp\asyncCall;
-use Amp\Deferred;
-use Amp\Promise;
-use Amp\Loop;
-
 class Worker implements Runnable
 {
 
@@ -28,22 +22,12 @@ class Worker implements Runnable
         $this->id = uniqid();
     }
 
-    public function run(): Promise
+    public function run()
     {
-        $deferred =  new Deferred();
-        $workerPool = $this->workFactory;
-        Loop::repeat(0, function ($watcherId) use($deferred, $workerPool) {
-            if ($workerPool->hasWork()) {
-                $work = $workerPool->createWork();
-                asyncCall(function() use($work) {
-                    $work->complete();
-                });
-            } else {
-                $deferred->resolve();
-                Loop::cancel($watcherId);
-            }
-        });
-        return $deferred->promise();
+        while($this->workFactory->hasWork()) {
+            $work = $this->workFactory->createWork();
+            $work->run();
+        }
     }
 
 

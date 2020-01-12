@@ -2,9 +2,8 @@
 
 namespace hdvianna\Concurrent;
 
-use Amp\Deferred;
+use function Amp\Parallel\Worker\enqueueCallable;
 use Amp\Promise;
-use Amp\Loop;
 
 class WorkerPool implements Runnable
 {
@@ -26,22 +25,15 @@ class WorkerPool implements Runnable
         return $this;
     }
 
-    public function run(): Promise
+    public function run()
     {
         $this->throwExceptionIfStarted(new PoolAlreadyStarted());
-        $deferred =  new Deferred();
-        $workers = $this->workers;
         $this->started = true;
-        $started = &$this->started;
-        Loop::run(function () use($workers, $deferred, &$started) {
-            Promise\all(array_map(function ($worker) {
-                return $worker->run();
-            }, $workers));
-
-            $deferred->resolve();
-            $started = false;
-        });
-        return $deferred->promise();
+        $workerPromises = array_map(function ($worker) {
+            return enqueueCallable([$worker, "run"]);
+        }, $this->workers);
+        Promise\wait(Promise\all($workerPromises));
+        $this->started = false;
     }
 
     private function throwExceptionIfStarted(\Exception $exception):void {

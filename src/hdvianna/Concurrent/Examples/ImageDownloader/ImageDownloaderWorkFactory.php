@@ -4,7 +4,7 @@
 namespace hdvianna\Concurrent\Examples\ImageDownloader;
 
 
-use hdvianna\Concurrent\Work;
+use hdvianna\Concurrent\Runnable;
 use hdvianna\Concurrent\WorkFactory;
 
 class ImageDownloaderWorkFactory implements WorkFactory
@@ -13,6 +13,7 @@ class ImageDownloaderWorkFactory implements WorkFactory
     private $maximumImages;
     private $imageSavePath;
     private $imagesProduced = 0;
+    private $lockFileName;
 
     /**
      * ImageDownloaderWorkFactory constructor.
@@ -23,18 +24,34 @@ class ImageDownloaderWorkFactory implements WorkFactory
     {
         $this->maximumImages = $maximumImages;
         $this->imageSavePath = $imageSavePath;
+        $this->lockFileName = $this->imageSavePath.DIRECTORY_SEPARATOR.uniqid().".lock";
     }
 
-    public function createWork(): Work
+    public function __destruct()
     {
-        $this->imagesProduced = $this->imagesProduced + 1;
+        @unlink($this->lockFileName);
+    }
+
+    public function createWork(): Runnable
+    {
+        $this->incrementImagesProduced();
         $imagePath = "$this->imageSavePath".DIRECTORY_SEPARATOR.uniqid().".jpg";
         return new ImageDownloaderWork($imagePath);
     }
 
+    private function  incrementImagesProduced()
+    {
+        $lockFile = fopen($this->lockFileName, "w+");
+        flock($lockFile, LOCK_EX);
+        $this->imagesProduced = $this->imagesProduced + 1;
+        flock($lockFile, LOCK_UN );
+        fclose($lockFile);
+    }
+
     public function hasWork(): bool
     {
-        return $this->imagesProduced < $this->maximumImages;
+        $hasWork = $this->imagesProduced < $this->maximumImages;
+        return $hasWork;
     }
 
 }

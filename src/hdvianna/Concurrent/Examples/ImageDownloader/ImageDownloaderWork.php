@@ -5,9 +5,9 @@ namespace hdvianna\Concurrent\Examples\ImageDownloader;
 
 
 use Curl\Curl;
-use hdvianna\Concurrent\Work;
+use hdvianna\Concurrent\Runnable;
 
-class ImageDownloaderWork implements Work
+class ImageDownloaderWork implements Runnable
 {
 
     private $savePath;
@@ -21,7 +21,7 @@ class ImageDownloaderWork implements Work
         $this->savePath = $savePath;
     }
 
-    public function complete()
+    public function run()
     {
         $url = "https://picsum.photos/800/600/?blur=2";
         $curl = new Curl();

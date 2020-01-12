@@ -4,7 +4,7 @@
 namespace hdvianna\Concurrent\Examples\LinePrinter;
 
 use Amp\ByteStream\ResourceOutputStream;
-use hdvianna\Concurrent\Work;
+use hdvianna\Concurrent\Runnable;
 use hdvianna\Concurrent\WorkFactory;
 
 class LinePrinterWorkFactory implements WorkFactory
@@ -27,7 +27,7 @@ class LinePrinterWorkFactory implements WorkFactory
         $this->moveNext();
     }
 
-    public function createWork(): Work
+    public function createWork(): Runnable
     {
         $fileLineData = new FileLineData();
         $fileLineData
