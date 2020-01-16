@@ -32,14 +32,14 @@ function parallelize(int $numberOfTasks, int $maximumTimeOfSleep)
         return rand(1, $maximumTimeOfSleep);
     }, $taskIds);
 
-    $main = new Runtime();
-    $mainFuture = $main->run(function (Channel $channel, array $timesToSleep) {
+    $producer = new Runtime();
+    $producerFuture = $producer->run(function (Channel $channel, array $timesToSleep) {
         foreach ($timesToSleep as $timeToSleep) {
             $channel->send($timeToSleep);
         }
     }, [$channel, $timesToSleep]);
 
-    $futures = array_map(function (string $id) use ($channel) {
+    $consumerFutures = array_map(function (string $id) use ($channel) {
         $runtime = new Runtime();
         return $runtime->run(function (string $id, Channel $channel) {
             $timeToSleep = $channel->recv();
@@ -50,8 +50,8 @@ function parallelize(int $numberOfTasks, int $maximumTimeOfSleep)
         }, [$id, $channel]);
     }, $taskIds);
 
-    wait($futures);
-    wait([$mainFuture]);
+    wait($consumerFutures);
+    wait([$producerFuture]);
 }
 
 function wait(array $futures)
