@@ -58,4 +58,15 @@ class LinePrinterWorkFactory implements WorkFactory
         $this->outputStream->end();
     }
 
+    public function createGeneratorClosure(): \Closure
+    {
+        // TODO: Implement createProducerClosure() method.
+    }
+
+    public function createWorkerClosure(): \Closure
+    {
+        // TODO: Implement createConsumerClosure() method.
+    }
+
+
 }

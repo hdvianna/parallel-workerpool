@@ -14,10 +14,10 @@ if (count($argv) !== 3) {
     $numberOfTests = intval($argv[2]);
 }
 
-//testWorkers($numberOfImages, 1, $numberOfTests);
+testWorkers($numberOfImages, 1, $numberOfTests);
 testWorkers($numberOfImages, 3, $numberOfTests);
-//testWorkers($numberOfImages, 5, $numberOfTests);
-//testWorkers($numberOfImages, 10, $numberOfTests);
+testWorkers($numberOfImages, 5, $numberOfTests);
+testWorkers($numberOfImages, 10, $numberOfTests);
 
 function testWorkers($numberOfImages, $workersNumber, $numberOfTests)
 {

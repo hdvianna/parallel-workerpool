@@ -6,6 +6,6 @@ namespace hdvianna\Concurrent;
 
 interface WorkFactory
 {
-    public function createWork() : Runnable;
-    public function hasWork() : bool;
+    public function createGeneratorClosure() : \Closure;
+    public function createWorkerClosure() : \Closure;
 }

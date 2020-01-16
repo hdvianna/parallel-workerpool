@@ -11,12 +11,8 @@
         "psr-4": {"": "src/"}
     },
     "require": {
-        "amphp/amp": "^2.2",
-        "amphp/mysql": "^1.2",
-        "php-curl-class/php-curl-class": "^8.6",
-        "amphp/parallel": "^1.2"
+        "php-curl-class/php-curl-class": "^8.6"
     },
     "require-dev": {
-        "phpunit/phpunit": "7"
     }
 }

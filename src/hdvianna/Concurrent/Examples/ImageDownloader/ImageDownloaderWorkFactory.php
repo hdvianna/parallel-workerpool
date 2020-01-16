@@ -4,7 +4,6 @@
 namespace hdvianna\Concurrent\Examples\ImageDownloader;
 
 
-use hdvianna\Concurrent\Runnable;
 use hdvianna\Concurrent\WorkFactory;
 
 class ImageDownloaderWorkFactory implements WorkFactory
@@ -12,8 +11,6 @@ class ImageDownloaderWorkFactory implements WorkFactory
 
     private $maximumImages;
     private $imageSavePath;
-    private $imagesProduced = 0;
-    private $lockFileName;
 
     /**
      * ImageDownloaderWorkFactory constructor.
@@ -24,34 +21,36 @@ class ImageDownloaderWorkFactory implements WorkFactory
     {
         $this->maximumImages = $maximumImages;
         $this->imageSavePath = $imageSavePath;
-        $this->lockFileName = $this->imageSavePath.DIRECTORY_SEPARATOR.uniqid().".lock";
     }
 
-    public function __destruct()
+    public function createGeneratorClosure(): \Closure
     {
-        @unlink($this->lockFileName);
+        $maximumImages = $this->maximumImages;
+        $imageSavePath = $this->imageSavePath;
+        return function () use ($maximumImages, $imageSavePath) {
+            $imagesProduced = 0;
+            while ($imagesProduced < $maximumImages) {
+                $imagesProduced++;
+                $imagePath = "$imageSavePath".DIRECTORY_SEPARATOR.uniqid().".jpg";
+                yield $imagePath;
+            }
+        };
     }
 
-    public function createWork(): Runnable
+    public function createWorkerClosure(): \Closure
     {
-        $this->incrementImagesProduced();
-        $imagePath = "$this->imageSavePath".DIRECTORY_SEPARATOR.uniqid().".jpg";
-        return new ImageDownloaderWork($imagePath);
-    }
-
-    private function  incrementImagesProduced()
-    {
-        $lockFile = fopen($this->lockFileName, "w+");
-        flock($lockFile, LOCK_EX);
-        $this->imagesProduced = $this->imagesProduced + 1;
-        flock($lockFile, LOCK_UN );
-        fclose($lockFile);
-    }
-
-    public function hasWork(): bool
-    {
-        $hasWork = $this->imagesProduced < $this->maximumImages;
-        return $hasWork;
+        return function($savePath) {
+            $url = "https://picsum.photos/800/600/?blur=2";
+            $curlHandler = curl_init($url);
+            curl_setopt($curlHandler, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($curlHandler, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($curlHandler, CURLOPT_RETURNTRANSFER, true);
+            $result = curl_exec($curlHandler);
+            curl_close($curlHandler);
+            $fileHandler = fopen($savePath, "w+");
+            fwrite($fileHandler, $result);
+            fclose($fileHandler);
+        };
     }
 
 }
