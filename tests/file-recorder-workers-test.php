@@ -34,7 +34,7 @@ function testWorkers($filePath, $workersNumber, $numberOfTests)
 function runTestWorkers($filePath, $workersNumber)
 {
     $t1 = microtime(true);
-    $lineRecorderWorkFactory = new LinePrinterWorkFactory($filePath);
+    $lineRecorderWorkFactory = new LinePrinterWorkFactory($filePath, "_{$workersNumber}workers_");
     $workerPool = new WorkerPool($lineRecorderWorkFactory);
     for($i = 0; $i < $workersNumber; $i++) {
         $workerPool->appendWorker();

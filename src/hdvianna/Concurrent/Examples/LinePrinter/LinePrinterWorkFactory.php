@@ -3,69 +3,55 @@
 
 namespace hdvianna\Concurrent\Examples\LinePrinter;
 
-use Amp\ByteStream\ResourceOutputStream;
-use hdvianna\Concurrent\Runnable;
 use hdvianna\Concurrent\WorkFactory;
 
 class LinePrinterWorkFactory implements WorkFactory
 {
 
-    private $fileHandler;
-    private $ended = false;
-    private $lineNumber = 0;
-    private $lineString = "";
-    private $outputStream;
+    private $inputFilePath;
+    private $outputFilePath;
 
-    public function __construct(string $filePath)
+    public function __construct(string $filePath, string $identifier = "")
     {
-        $this->fileHandler = fopen($filePath, "r");
-        $pathInfo =  pathinfo($filePath);
-        $outputPath = "{$pathInfo['dirname']}/{$pathInfo['filename']}.out.{$pathInfo['extension']}";
-        @unlink($outputPath);
-        $fileHandler = fopen($outputPath, 'a');
-        $this->outputStream = new ResourceOutputStream($fileHandler);
-        $this->moveNext();
+        $this->inputFilePath = $filePath;
+        $pathInfo = pathinfo($this->inputFilePath);
+        $this->outputFilePath = "{$pathInfo['dirname']}/{$pathInfo['filename']}{$identifier}.out.{$pathInfo['extension']}";
+        @unlink($this->outputFilePath);
     }
 
-    public function createWork(): Runnable
+    public function createWorkGeneratorClosure(): \Closure
     {
-        $fileLineData = new FileLineData();
-        $fileLineData
-                ->setLineNumber($this->lineNumber)
-                ->setLineString($this->lineString)
-                ->setOutputStream($this->outputStream);
-        $this->moveNext();
-        return new LinePrinterWork($fileLineData);
-    }
-
-    public function hasWork(): bool
-    {
-        return !$this->ended;
-    }
-
-    private function moveNext() {
-        $this->lineString = fgets($this->fileHandler);
-        if ($this->lineString === FALSE) {
-            $this->ended = true;
-            fclose($this->fileHandler);
-        } else {
-            $this->lineNumber += 1;
-        }
-    }
-
-    public function __destruct()
-    {
-        $this->outputStream->end();
-    }
-
-    public function createGeneratorClosure(): \Closure
-    {
-        // TODO: Implement createProducerClosure() method.
+        $inputFilePath = $this->inputFilePath;
+        return function () use ($inputFilePath) {
+            $fileHandler = fopen($inputFilePath, "r");
+            $lineNumber = 0;
+            while (true) {
+                $lineString = fgets($fileHandler);
+                $lineNumber++;
+                if ($lineString !== FALSE) {
+                    $work = new \stdClass();
+                    $work->value = $lineString;
+                    $work->number = $lineNumber;
+                    yield $work;
+                } else {
+                    fclose($fileHandler);
+                    break;
+                }
+            }
+        };
     }
 
     public function createWorkerClosure(): \Closure
     {
-        // TODO: Implement createConsumerClosure() method.
+        $outputFilePath = $this->outputFilePath;
+        return function ($work) use ($outputFilePath) {
+            $fileHandler = fopen($outputFilePath, "a+");
+            $outputData = "Line number: {$work->number}; value: {$work->value}";
+            flock($fileHandler, LOCK_EX);
+            fwrite($fileHandler, $outputData);
+            flock($fileHandler, LOCK_UN);
+            fclose($fileHandler);
+        };
     }
 
 

@@ -23,7 +23,7 @@ class ImageDownloaderWorkFactory implements WorkFactory
         $this->imageSavePath = $imageSavePath;
     }
 
-    public function createGeneratorClosure(): \Closure
+    public function createWorkGeneratorClosure(): \Closure
     {
         $maximumImages = $this->maximumImages;
         $imageSavePath = $this->imageSavePath;

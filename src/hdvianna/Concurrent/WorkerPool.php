@@ -15,7 +15,15 @@ class WorkerPool implements Runnable
 
     public function __construct(WorkFactory $workFactory)
     {
+        $this->checkIfParallelExtensionIsAvailable();
         $this->workFactory = $workFactory;
+    }
+
+    private function checkIfParallelExtensionIsAvailable()
+    {
+        if (!extension_loaded("parallel")) {
+            throw new ParallelExtensionNotAvailableException();
+        }
     }
 
     public function appendWorker() : WorkerPool {
@@ -27,17 +35,39 @@ class WorkerPool implements Runnable
     public function run()
     {
         $this->throwExceptionIfStarted(new PoolAlreadyStarted());
-
         $channel = new Channel();
+        $futures = array_merge($this->createArrayOfWorkGeneratorFutures($channel), $this->createArrayOfWorkerFutures($channel));
+        $this->wait($futures);
+        $this->started = false;
+    }
 
+    private function throwExceptionIfStarted(\Exception $exception):void
+    {
+        if ($this->started) {
+            throw $exception;
+        }
+    }
+
+    private function createArrayOfWorkGeneratorFutures($channel)
+    {
         $producer = new Runtime();
-        $producerFuture = $producer->run(function (Channel $channel, \Closure $producer) {
-            foreach($producer() as $product) {
-                $channel->send($product);
+        $workGeneratorClosure = $this->workFactory->createWorkGeneratorClosure();
+        $producerFuture = $producer->run(function (Channel $channel, \Closure $workGeneratorClosure) {
+            $workGenerator = $workGeneratorClosure();
+            if (is_a($workGenerator, "\Generator")) {
+                foreach($workGeneratorClosure() as $product) {
+                    $channel->send($product);
+                }
+                $channel->close();
+            } else {
+                throw new GeneratorExpectedException();
             }
-            $channel->close();
-        }, [$channel, $this->workFactory->createGeneratorClosure()]);
+        }, [$channel, $workGeneratorClosure]);
+        return [$producerFuture];
+    }
 
+    private function createArrayOfWorkerFutures($channel)
+    {
         $workerFutures = array_map(function($workerClosure) use ($channel) {
             $worker = new Runtime();
             $workerFuture = $worker->run(function($channel, $workerClosure) {
@@ -52,17 +82,7 @@ class WorkerPool implements Runnable
             }, [$channel, $workerClosure]);
             return $workerFuture;
         }, $this->workerClosures);
-
-        $futures = array_merge([$producerFuture], $workerFutures);
-        $this->wait($futures);
-        $this->started = false;
-    }
-
-    private function throwExceptionIfStarted(\Exception $exception):void
-    {
-        if ($this->started) {
-            throw $exception;
-        }
+        return $workerFutures;
     }
 
     private function wait(array $futures):void
