@@ -1,5 +1,5 @@
 {
-    "name": "hdvianna/amp-workerpool",
+    "name": "hdvianna/parallel-workerpool",
     "license": "MIT",
     "authors": [
         {
@@ -11,7 +11,8 @@
         "psr-4": {"": "src/"}
     },
     "require": {
-        "php-curl-class/php-curl-class": "^8.6"
+        "php-curl-class/php-curl-class": "^8.6",
+        "php" : "^7.2"
     },
     "require-dev": {
     }
