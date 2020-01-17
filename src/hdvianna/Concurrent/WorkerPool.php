@@ -13,10 +13,13 @@ class WorkerPool implements Runnable
     private $workerClosures = [];
     private $started = false;
 
-    public function __construct(WorkFactory $workFactory)
+    public function __construct(WorkFactory $workFactory, int $startingNumberOfWorkers = 0)
     {
         $this->checkIfParallelExtensionIsAvailable();
         $this->workFactory = $workFactory;
+        for($i = 0; $i < $startingNumberOfWorkers; $i++) {
+            $this->appendWorker();
+        }
     }
 
     private function checkIfParallelExtensionIsAvailable()

@@ -35,10 +35,7 @@ function runTestWorkers($filePath, $workersNumber)
 {
     $t1 = microtime(true);
     $lineRecorderWorkFactory = new LinePrinterWorkFactory($filePath, "_{$workersNumber}workers_");
-    $workerPool = new WorkerPool($lineRecorderWorkFactory);
-    for($i = 0; $i < $workersNumber; $i++) {
-        $workerPool->appendWorker();
-    }
+    $workerPool = new WorkerPool($lineRecorderWorkFactory, $workersNumber);
     $workerPool->run();
     $endTime = microtime(true) - $t1;
     return $endTime;

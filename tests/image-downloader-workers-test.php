@@ -35,10 +35,7 @@ function runTestWorkers($numberOfImages, $workersNumber)
 {
     $t1 = microtime(true);
     $imageDownloaderWorkFactory = new ImageDownloaderWorkFactory($numberOfImages, __DIR__.DIRECTORY_SEPARATOR."downloads");
-    $workerPool = new WorkerPool($imageDownloaderWorkFactory);
-    for($i = 0; $i < $workersNumber; $i++) {
-        $workerPool->appendWorker();
-    }
+    $workerPool = new WorkerPool($imageDownloaderWorkFactory, $workersNumber);
     $workerPool->run();
     $endTime = microtime(true) - $t1;
     return $endTime;
