@@ -41,7 +41,7 @@ class LinePrinterWorkFactory implements WorkFactory
         };
     }
 
-    public function createWorkerClosure(): \Closure
+    public function createWorkConsumerClosure(): \Closure
     {
         $outputFilePath = $this->outputFilePath;
         return function ($work) use ($outputFilePath) {

@@ -37,7 +37,7 @@ class ImageDownloaderWorkFactory implements WorkFactory
         };
     }
 
-    public function createWorkerClosure(): \Closure
+    public function createWorkConsumerClosure(): \Closure
     {
         return function($savePath) {
             $url = "https://picsum.photos/800/600/?blur=2";

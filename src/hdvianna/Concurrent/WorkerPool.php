@@ -31,7 +31,7 @@ class WorkerPool implements Runnable
 
     public function appendWorker() : WorkerPool {
         $this->throwExceptionIfStarted(new WorkerAdditionException());
-        $this->workerClosures[] = $this->workFactory->createWorkerClosure();
+        $this->workerClosures[] = $this->workFactory->createWorkConsumerClosure();
         return $this;
     }
 
@@ -39,7 +39,7 @@ class WorkerPool implements Runnable
     {
         $this->throwExceptionIfStarted(new PoolAlreadyStarted());
         $channel = new Channel();
-        $futures = array_merge($this->createArrayOfWorkGeneratorFutures($channel), $this->createArrayOfWorkerFutures($channel));
+        $futures = array_merge($this->createArrayOfWorkGeneratorFutures($channel), $this->createArrayOfWorkConsumerFutures($channel));
         $this->wait($futures);
         $this->started = false;
     }
@@ -69,15 +69,15 @@ class WorkerPool implements Runnable
         return [$producerFuture];
     }
 
-    private function createArrayOfWorkerFutures($channel)
+    private function createArrayOfWorkConsumerFutures($channel)
     {
-        $workerFutures = array_map(function($workerClosure) use ($channel) {
+        $workConsumerFutures = array_map(function($workerClosure) use ($channel) {
             $worker = new Runtime();
-            $workerFuture = $worker->run(function($channel, $workerClosure) {
+            $workerFuture = $worker->run(function($channel, $workerConsumerClosure) {
                 while(true) {
                     try {
                         $work = $channel->recv();
-                        $workerClosure($work);
+                        $workerConsumerClosure($work);
                     } catch (\parallel\Channel\Error\Closed $ex) {
                         break;
                     }
@@ -85,7 +85,7 @@ class WorkerPool implements Runnable
             }, [$channel, $workerClosure]);
             return $workerFuture;
         }, $this->workerClosures);
-        return $workerFutures;
+        return $workConsumerFutures;
     }
 
     private function wait(array $futures):void
