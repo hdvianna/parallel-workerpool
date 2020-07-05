@@ -38,7 +38,7 @@ use hdvianna\Concurrent\WorkFactoryInterface;
     public function createWorkConsumerClosure(): \Closure
     {
         return function($work) {
-            printf("[$work->id]: Sleeping %d for milliseconds ...%s", $work->time, PHP_EOL);
+            printf("[$work->id]: Sleeping for %d milliseconds ...%s", $work->time, PHP_EOL);
             usleep($work->time * 1000);
             printf("[$work->id]: Woke up after %d milliseconds ...%s", $work->time, PHP_EOL);
         };
