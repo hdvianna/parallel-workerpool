@@ -4,7 +4,7 @@ namespace hdvianna\Concurrent;
 
 use parallel\{Runtime,Channel};
 
-class WorkerPool implements Runnable
+class WorkerPool implements RunnableInterface
 {
     /**
      * @var WorkerFactory
@@ -13,7 +13,7 @@ class WorkerPool implements Runnable
     private $workerClosures = [];
     private $started = false;
 
-    public function __construct(WorkFactory $workFactory, int $startingNumberOfWorkers = 0)
+    public function __construct(WorkFactoryInterface $workFactory, int $startingNumberOfWorkers = 0)
     {
         $this->checkIfParallelExtensionIsAvailable();
         $this->workFactory = $workFactory;

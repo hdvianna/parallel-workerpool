@@ -4,9 +4,9 @@
 namespace hdvianna\Concurrent\Examples\ImageDownloader;
 
 
-use hdvianna\Concurrent\WorkFactory;
+use hdvianna\Concurrent\WorkFactoryInterface;
 
-class ImageDownloaderWorkFactory implements WorkFactory
+class ImageDownloaderWorkFactory implements WorkFactoryInterface
 {
 
     private $maximumImages;
@@ -31,8 +31,7 @@ class ImageDownloaderWorkFactory implements WorkFactory
             $imagesProduced = 0;
             while ($imagesProduced < $maximumImages) {
                 $imagesProduced++;
-                $imagePath = "$imageSavePath".DIRECTORY_SEPARATOR.uniqid().".jpg";
-                yield $imagePath;
+                yield "$imageSavePath".DIRECTORY_SEPARATOR.uniqid().".jpg";
             }
         };
     }

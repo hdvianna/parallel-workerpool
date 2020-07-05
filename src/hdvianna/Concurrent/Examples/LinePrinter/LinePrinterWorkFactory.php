@@ -3,9 +3,9 @@
 
 namespace hdvianna\Concurrent\Examples\LinePrinter;
 
-use hdvianna\Concurrent\WorkFactory;
+use hdvianna\Concurrent\WorkFactoryInterface;
 
-class LinePrinterWorkFactory implements WorkFactory
+class LinePrinterWorkFactory implements WorkFactoryInterface
 {
 
     private $inputFilePath;

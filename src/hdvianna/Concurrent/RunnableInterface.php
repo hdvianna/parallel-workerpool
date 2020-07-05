@@ -4,7 +4,7 @@
 namespace hdvianna\Concurrent;
 
 
-interface Runnable
+interface RunnableInterface
 {
     public function run();
 }

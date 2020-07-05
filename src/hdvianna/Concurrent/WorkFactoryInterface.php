@@ -4,7 +4,7 @@
 namespace hdvianna\Concurrent;
 
 
-interface WorkFactory
+interface WorkFactoryInterface
 {
     public function createWorkGeneratorClosure() : \Closure;
     public function createWorkConsumerClosure() : \Closure;
