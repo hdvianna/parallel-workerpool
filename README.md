@@ -40,7 +40,7 @@ use hdvianna\Concurrent\WorkFactoryInterface;
         return function($work) {
             printf("[$work->id]: Sleeping %d for milliseconds ...%s", $work->time, PHP_EOL);
             usleep($work->time * 1000);
-            printf("[$work->id]:Woke up after %d for milliseconds ...%s", $work->time, PHP_EOL);
+            printf("[$work->id]: Woke up after %d milliseconds ...%s", $work->time, PHP_EOL);
         };
     }
 
