@@ -5,3 +5,4 @@ composer.lock
 *.out.csv
 test-data_x10000.csv
 tests/downloads/*.jpg
+!tests/downloads
