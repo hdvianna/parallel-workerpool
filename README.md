@@ -10,9 +10,15 @@ The `WorkerPool` requires an implementation of the `WorkFactoryInterface`
 which is responsible for creating the _consumer_ and _producer closures_. 
 A producer closure must return a [Generator](https://www.php.net/manual/en/class.generator.php).
 
-### Installation
+### Composer installation
 
 `composer require hdvianna/parallel-workerpool`
+
+### Runing with Docker
+
+`docker-compose up`
+
+Docker compose will build an environment with the needed extensions installed and create a bind mount to the current directory.
 
 ### Example
 
