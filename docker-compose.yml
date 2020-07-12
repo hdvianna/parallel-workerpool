@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  php:
+    build: .
+    image: parallel-workpool-dev
+    volumes:
+      - .:/var/local/parallel-workpool
+    command: >
+      sh -c "tail -f /dev/null && \
+        composer install -vvv"
