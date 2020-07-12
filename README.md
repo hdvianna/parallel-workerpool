@@ -1,7 +1,7 @@
 # Parallel Worker Pool
 
 Parallel worker pool uses the PHP parallel extension 
-to provide a simple interface for dealing with synchronization 
+to provide a simple interface for dealing with parallelization 
 of tasks.
 
 ## Usage
