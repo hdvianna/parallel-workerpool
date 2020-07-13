@@ -2,7 +2,9 @@
 
 namespace hdvianna\Concurrent;
 
+use Exception;
 use parallel\{Runtime,Channel};
+use parallel\Channel\Error\Closed;
 
 class WorkerPool implements RunnableInterface
 {
@@ -13,6 +15,13 @@ class WorkerPool implements RunnableInterface
     private $workerClosures = [];
     private $started = false;
 
+    /**
+     * WorkerPool constructor.
+     * @param WorkFactoryInterface $workFactory
+     * @param int $startingNumberOfWorkers
+     * @throws ParallelExtensionNotAvailableException
+     * @throws Exception
+     */
     public function __construct(WorkFactoryInterface $workFactory, int $startingNumberOfWorkers = 0)
     {
         $this->checkIfParallelExtensionIsAvailable();
@@ -22,6 +31,9 @@ class WorkerPool implements RunnableInterface
         }
     }
 
+    /**
+     * @throws ParallelExtensionNotAvailableException
+     */
     private function checkIfParallelExtensionIsAvailable()
     {
         if (!extension_loaded("parallel")) {
@@ -29,12 +41,19 @@ class WorkerPool implements RunnableInterface
         }
     }
 
+    /**
+     * @return $this
+     * @throws Exception
+     */
     public function appendWorker() : WorkerPool {
         $this->throwExceptionIfStarted(new WorkerAdditionException());
         $this->workerClosures[] = $this->workFactory->createWorkConsumerClosure();
         return $this;
     }
 
+    /**
+     * @throws Exception
+     */
     public function run()
     {
         $this->throwExceptionIfStarted(new PoolAlreadyStarted());
@@ -44,7 +63,11 @@ class WorkerPool implements RunnableInterface
         $this->started = false;
     }
 
-    private function throwExceptionIfStarted(\Exception $exception):void
+    /**
+     * @param Exception $exception
+     * @throws Exception
+     */
+    private function throwExceptionIfStarted(Exception $exception):void
     {
         if ($this->started) {
             throw $exception;
@@ -71,21 +94,19 @@ class WorkerPool implements RunnableInterface
 
     private function createArrayOfWorkConsumerFutures($channel)
     {
-        $workConsumerFutures = array_map(function($workerClosure) use ($channel) {
+        return array_map(function($workerClosure) use ($channel) {
             $worker = new Runtime();
-            $workerFuture = $worker->run(function($channel, $workerConsumerClosure) {
+            return $worker->run(function($channel, $workerConsumerClosure) {
                 while(true) {
                     try {
                         $work = $channel->recv();
                         $workerConsumerClosure($work);
-                    } catch (\parallel\Channel\Error\Closed $ex) {
+                    } catch (Closed $ex) {
                         break;
                     }
                 }
             }, [$channel, $workerClosure]);
-            return $workerFuture;
         }, $this->workerClosures);
-        return $workConsumerFutures;
     }
 
     private function wait(array $futures):void
