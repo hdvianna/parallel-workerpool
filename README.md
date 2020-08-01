@@ -1,6 +1,6 @@
 # Parallel Worker Pool
 
-Parallel worker pool uses the PHP parallel extension [https://www.php.net/manual/en/book.parallel.php](https://www.php.net/manual/en/book.parallel.php)
+Parallel worker pool uses the [PHP parallel extension](https://www.php.net/manual/en/book.parallel.php)
 to provide a simple interface for dealing with parallelization 
 of tasks.
 
