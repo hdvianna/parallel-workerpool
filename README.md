@@ -108,7 +108,8 @@ $factory = new class ($sharedData, $works) implements WorkFactoryInterface {
     {
         $channel = $this->channel;
         return function ($work) use ($channel) {
-            //As the channel length is equals to one, just one worker will proceed. The others will wait
+            /*As the channel length is equals to one, just one worker 
+            will proceed. The others will wait*/
             $shared = $channel->recv();
             //Sends the data and unlocks the next worker
             $channel->send($shared + $work->value);
