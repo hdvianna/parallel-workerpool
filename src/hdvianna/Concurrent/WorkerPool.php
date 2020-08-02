@@ -3,17 +3,27 @@
 namespace hdvianna\Concurrent;
 
 use Exception;
-use parallel\{Runtime,Channel};
+use parallel\{Runtime, Channel};
 use parallel\Channel\Error\Closed;
 
-class WorkerPool implements RunnableInterface
+class WorkerPool implements RunnableInterface, MutexInfoInterface
 {
     /**
      * @var WorkerFactory
      */
     private $workFactory;
+    /**
+     * @var array
+     */
     private $workerClosures = [];
+    /**
+     * @var bool
+     */
     private $started = false;
+    /**
+     * @var Channel
+     */
+    private $mutexChannel;
 
     /**
      * WorkerPool constructor.
@@ -26,9 +36,11 @@ class WorkerPool implements RunnableInterface
     {
         $this->checkIfParallelExtensionIsAvailable();
         $this->workFactory = $workFactory;
-        for($i = 0; $i < $startingNumberOfWorkers; $i++) {
+        for ($i = 0; $i < $startingNumberOfWorkers; $i++) {
             $this->appendWorker();
         }
+        $this->mutexChannel = new Channel(1);
+        $this->mutexChannel->send(null);
     }
 
     /**
@@ -45,11 +57,21 @@ class WorkerPool implements RunnableInterface
      * @return $this
      * @throws Exception
      */
-    public function appendWorker() : WorkerPool {
+    public function appendWorker(): WorkerPool
+    {
         $this->throwExceptionIfStarted(new WorkerAdditionException());
         $this->workerClosures[] = $this->workFactory->createWorkConsumerClosure();
         return $this;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getLastValue()
+    {
+        return $this->mutexChannel->recv();
+    }
+
 
     /**
      * @throws Exception
@@ -67,7 +89,7 @@ class WorkerPool implements RunnableInterface
      * @param Exception $exception
      * @throws Exception
      */
-    private function throwExceptionIfStarted(Exception $exception):void
+    private function throwExceptionIfStarted(Exception $exception): void
     {
         if ($this->started) {
             throw $exception;
@@ -81,7 +103,7 @@ class WorkerPool implements RunnableInterface
         $producerFuture = $producer->run(function (Channel $channel, \Closure $workGeneratorClosure) {
             $workGenerator = $workGeneratorClosure();
             if (is_a($workGenerator, "\Generator")) {
-                foreach($workGeneratorClosure() as $product) {
+                foreach ($workGeneratorClosure() as $product) {
                     $channel->send($product);
                 }
                 $channel->close();
@@ -94,22 +116,38 @@ class WorkerPool implements RunnableInterface
 
     private function createArrayOfWorkConsumerFutures($channel)
     {
-        return array_map(function($workerClosure) use ($channel) {
+        return array_map(function ($workerClosure) use ($channel) {
             $worker = new Runtime();
-            return $worker->run(function($channel, $workerConsumerClosure) {
-                while(true) {
+            return $worker->run(function ($channel, $workerConsumerClosure, $lock, $unlock) {
+                while (true) {
                     try {
                         $work = $channel->recv();
-                        $workerConsumerClosure($work);
+                        $workerConsumerClosure($work, $lock, $unlock);
                     } catch (Closed $ex) {
                         break;
                     }
                 }
-            }, [$channel, $workerClosure]);
+            }, [$channel, $workerClosure, $this->createLockClosure(), $this->createUnlockClosure()]);
         }, $this->workerClosures);
     }
 
-    private function wait(array $futures):void
+    private function createLockClosure()
+    {
+        $mutexChannel = $this->mutexChannel;
+        return function () use ($mutexChannel) {
+            return $mutexChannel->recv();
+        };
+    }
+
+    private function createUnlockClosure()
+    {
+        $mutexChannel = $this->mutexChannel;
+        return function ($value = null) use ($mutexChannel) {
+            $mutexChannel->send($value);
+        };
+    }
+
+    private function wait(array $futures): void
     {
         array_map(function ($future) {
             return $future->value();

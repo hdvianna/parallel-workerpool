@@ -4,17 +4,17 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use hdvianna\Concurrent\WorkFactoryInterface;
 use hdvianna\Concurrent\WorkerPool;
-use parallel\Channel;
 
 $sharedData = 700;
 $works = 1000;
 
-$factory = new class ($sharedData, $works) implements WorkFactoryInterface {
+$pool = new WorkerPool((new class ($sharedData, $works) implements WorkFactoryInterface {
+
 
     /**
-     * @var parallel\Channel;
+     * @var int
      */
-    private $channel;
+    private $sharedData;
 
     /**
      * @var int
@@ -28,9 +28,8 @@ $factory = new class ($sharedData, $works) implements WorkFactoryInterface {
      */
     public function __construct($sharedData, $works)
     {
-        $this->channel = new Channel(1);
-        $this->channel->send($sharedData);
         $this->works = $works;
+        $this->sharedData = $sharedData;
     }
 
     public function createWorkGeneratorClosure(): \Closure
@@ -47,21 +46,20 @@ $factory = new class ($sharedData, $works) implements WorkFactoryInterface {
 
     public function createWorkConsumerClosure(): \Closure
     {
-        $channel = $this->channel;
-        return function ($work) use ($channel) {
-            $shared = $channel->recv();
-            $channel->send($shared + $work->value);
+        $sharedData = $this->sharedData;
+        return function ($work, $lock, $unlock) use (&$sharedData) {
+            $shared = $lock();
+            if (!isset($shared)) {
+                $shared = $sharedData;
+            }
+            $shared += $work->value;
+            $unlock($shared);
         };
     }
 
-    public function result()
-    {
-        return $this->channel->recv();
-    }
-
-};
-(new WorkerPool($factory, 10))->run();
-$result = $factory->result();
-echo("\$result is equals to \$works + \$sharedData".PHP_EOL);
-echo("$result = $works + $sharedData".PHP_EOL);
-assert($result === ($works + $sharedData));
+}), 10);
+$pool->run();
+$result = $pool->getLastValue();
+echo("\$result is equals to \$works + \$sharedData?" . PHP_EOL);
+echo("($result is equals to $works + $sharedData?)" . PHP_EOL);
+echo(assert($result === ($works + $sharedData)) ? "Yes!": "No =(").PHP_EOL;
