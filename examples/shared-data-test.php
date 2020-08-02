@@ -46,11 +46,11 @@ $pool = new WorkerPool((new class ($sharedData, $works) implements WorkFactoryIn
 
     public function createWorkConsumerClosure(): \Closure
     {
-        $sharedData = $this->sharedData;
-        return function ($work, $lock, $unlock) use (&$sharedData) {
+        $initialData = $this->sharedData;
+        return function ($work, $lock, $unlock) use (&$initialData) {
             $shared = $lock();
             if (!isset($shared)) {
-                $shared = $sharedData;
+                $shared = $initialData;
             }
             $shared += $work->value;
             $unlock($shared);
@@ -59,7 +59,7 @@ $pool = new WorkerPool((new class ($sharedData, $works) implements WorkFactoryIn
 
 }), 10);
 $pool->run();
-$result = $pool->getLastValue();
+$result = $pool->lastValue();
 echo("\$result is equals to \$works + \$sharedData?" . PHP_EOL);
 echo("($result is equals to $works + $sharedData?)" . PHP_EOL);
 echo(assert($result === ($works + $sharedData)) ? "Yes!": "No =(").PHP_EOL;

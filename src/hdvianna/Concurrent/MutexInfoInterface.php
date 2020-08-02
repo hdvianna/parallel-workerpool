@@ -9,5 +9,5 @@ interface MutexInfoInterface
     /**
      * @return mixed
      */
-    public function getLastValue();
+    public function lastValue();
 }

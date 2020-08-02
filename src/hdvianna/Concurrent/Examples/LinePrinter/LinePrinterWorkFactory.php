@@ -44,13 +44,13 @@ class LinePrinterWorkFactory implements WorkFactoryInterface
     public function createWorkConsumerClosure(): \Closure
     {
         $outputFilePath = $this->outputFilePath;
-        return function ($work) use ($outputFilePath) {
+        return function ($work, $lock, $unlock) use ($outputFilePath) {
+            $lock();
             $fileHandler = fopen($outputFilePath, "a+");
             $outputData = "Line number: {$work->number}; value: {$work->value}";
-            flock($fileHandler, LOCK_EX);
             fwrite($fileHandler, $outputData);
-            flock($fileHandler, LOCK_UN);
             fclose($fileHandler);
+            $unlock();
         };
     }
 

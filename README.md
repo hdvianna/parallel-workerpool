@@ -56,22 +56,24 @@ use hdvianna\Concurrent\WorkerPool;
 
 ### Synchronizing data
 
-Data can be synchronized by using channels. The following example creates a channel of length equals to one. In this case, just one worker at a time will be able to receive the data by invoking the method `Channel::recv()`. The other workers will be locked until the woker invokes the method `Channel::send()`.
+Data can be synchronized by using lock and unlock closures sent to the worker functions. 
+The shared data are received from the `$lock` closure and sent to the `$unlock` closure.
+The last value sent can be get invoking the  `WorkerPool::lastValue()`
 
 ```php
 use hdvianna\Concurrent\WorkFactoryInterface;
 use hdvianna\Concurrent\WorkerPool;
-use parallel\Channel;
 
 $sharedData = 700;
 $works = 1000;
 
-$factory = new class ($sharedData, $works) implements WorkFactoryInterface {
+$pool = new WorkerPool((new class ($sharedData, $works) implements WorkFactoryInterface {
+
 
     /**
-     * @var parallel\Channel;
+     * @var int
      */
-    private $channel;
+    private $sharedData;
 
     /**
      * @var int
@@ -85,11 +87,8 @@ $factory = new class ($sharedData, $works) implements WorkFactoryInterface {
      */
     public function __construct($sharedData, $works)
     {
-        //Creates a channel of length 1
-        $this->channel = new Channel(1);
-        //Initializes the shared data
-        $this->channel->send($sharedData);
         $this->works = $works;
+        $this->sharedData = $sharedData;
     }
 
     public function createWorkGeneratorClosure(): \Closure
@@ -106,25 +105,27 @@ $factory = new class ($sharedData, $works) implements WorkFactoryInterface {
 
     public function createWorkConsumerClosure(): \Closure
     {
-        $channel = $this->channel;
-        return function ($work) use ($channel) {
-            /*As the channel length is equals to one, just one worker 
-            will proceed. The others will wait*/
-            $shared = $channel->recv();
-            //Sends the data and unlocks the next worker
-            $channel->send($shared + $work->value);
+        $initialValue = $this->sharedData;
+        //Use the $lock and $unlock closures to synchronize data 
+        return function ($work, $lock, $unlock) use ($initialValue) {
+            /*Synchronize the data. Will block and wait for data. 
+            $lock will return the last value*/
+            $shared = $lock();            
+            if (!isset($shared)) {
+                //Data was not initialized 
+                $shared = $initialValue;
+            }
+            $shared += $work->value;
+            //Unlocks sending the new data.
+            $unlock($shared);
         };
     }
 
-    public function result()
-    {
-        return $this->channel->recv();
-    }
-
-};
-(new WorkerPool($factory, 10))->run();
-$result = $factory->result();
-echo("\$result is equals to \$works + \$sharedData".PHP_EOL);
-echo("$result = $works + $sharedData".PHP_EOL);
-assert($result === ($works + $sharedData));
+}), 10);
+$pool->run();
+//Get the last value sent to the unlock closure
+$result = $pool->lastValue();
+echo("\$result is equals to \$works + \$sharedData?" . PHP_EOL);
+echo("($result is equals to $works + $sharedData?)" . PHP_EOL);
+echo(assert($result === ($works + $sharedData)) ? "Yes!": "No =(").PHP_EOL;
 ```

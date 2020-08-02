@@ -67,7 +67,7 @@ class WorkerPool implements RunnableInterface, MutexInfoInterface
     /**
      * @return mixed
      */
-    public function getLastValue()
+    public function lastValue()
     {
         return $this->mutexChannel->recv();
     }
