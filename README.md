@@ -125,7 +125,7 @@ $pool = new WorkerPool((new class ($sharedData, $works) implements WorkFactoryIn
 $pool->run();
 //Get the last value sent to the unlock closure
 $result = $pool->lastValue();
-echo("\$result is equals to \$works + \$sharedData?" . PHP_EOL);
-echo("($result is equals to $works + $sharedData?)" . PHP_EOL);
+echo("\$result equals to \$works + \$sharedData?" . PHP_EOL);
+echo("($result equals to $works + $sharedData?)" . PHP_EOL);
 echo(assert($result === ($works + $sharedData)) ? "Yes!": "No =(").PHP_EOL;
 ```
