@@ -47,7 +47,7 @@ $pool = new WorkerPool((new class ($sharedData, $works) implements WorkFactoryIn
     public function createWorkConsumerClosure(): \Closure
     {
         $initialData = $this->sharedData;
-        return function ($work, $lock, $unlock) use (&$initialData) {
+        return function ($work, $lock, $unlock) use ($initialData) {
             $shared = $lock();
             if (!isset($shared)) {
                 $shared = $initialData;
