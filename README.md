@@ -18,7 +18,7 @@ A producer closure must return a [Generator](https://www.php.net/manual/en/class
 
 `docker-compose up`
 
-Docker compose will build an environment with the needed extensions installed and create a bind mount to the current directory.
+Docker compose builds an environment with the needed extensions installed and create a bind mount to the current directory.
 
 ### Example
 
