@@ -26,6 +26,16 @@ class WorkerPool implements RunnableInterface, MutexInfoInterface
     private $mutexChannel;
 
     /**
+     * @var $lastValue
+     */
+    private $lastValue;
+
+    /**
+     * @var $lastValue
+     */
+    private $lastValueSent = false;
+
+    /**
      * WorkerPool constructor.
      * @param WorkFactoryInterface $workFactory
      * @param int $startingNumberOfWorkers
@@ -39,8 +49,6 @@ class WorkerPool implements RunnableInterface, MutexInfoInterface
         for ($i = 0; $i < $startingNumberOfWorkers; $i++) {
             $this->appendWorker();
         }
-        $this->mutexChannel = new Channel(1);
-        $this->mutexChannel->send(null);
     }
 
     /**
@@ -65,22 +73,17 @@ class WorkerPool implements RunnableInterface, MutexInfoInterface
     }
 
     /**
-     * @return mixed
-     */
-    public function lastValue()
-    {
-        return $this->mutexChannel->recv();
-    }
-
-
-    /**
      * @throws Exception
      */
     public function run()
     {
         $this->throwExceptionIfStarted(new PoolAlreadyStarted());
-        $channel = new Channel();
-        $futures = array_merge($this->createArrayOfWorkGeneratorFutures($channel), $this->createArrayOfWorkConsumerFutures($channel));
+        $this->started = true;
+        $this->lastValueSent = false;
+        $this->mutexChannel = new Channel(1);
+        $this->mutexChannel->send(null);
+        $workChannel = new Channel();
+        $futures = array_merge($this->createArrayOfWorkGeneratorFutures($workChannel), $this->createArrayOfWorkConsumerFutures($workChannel));
         $this->wait($futures);
         $this->started = false;
     }
@@ -152,6 +155,19 @@ class WorkerPool implements RunnableInterface, MutexInfoInterface
         array_map(function ($future) {
             return $future->value();
         }, $futures);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function lastValue()
+    {
+        if ($this->started) {
+            throw new PoolRunningException();
+        } elseif(!$this->lastValueSent) {
+            $this->lastValue = $this->mutexChannel->recv();
+        }
+        return $this->lastValue;
     }
 
 }
