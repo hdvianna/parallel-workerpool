@@ -166,6 +166,7 @@ class WorkerPool implements RunnableInterface, MutexInfoInterface
             throw new PoolRunningException();
         } elseif(!$this->lastValueSent) {
             $this->lastValue = $this->mutexChannel->recv();
+            $this->lastValueSent = true;
         }
         return $this->lastValue;
     }
