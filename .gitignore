@@ -4,3 +4,4 @@ composer.lock
 1900-01-01-2019-08-19.csv
 *.out.csv
 test-data_x10000.csv
+.phpunit.result.cache
